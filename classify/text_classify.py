@@ -13,7 +13,7 @@
 import os
 import sys
 import thulac
-from nlp.punct import punct
+from data.punct import punct
 from gensim import corpora, models
 import time
 import pickle
@@ -145,11 +145,51 @@ def checkPred(data_tag, data_pred):
     err_ratio = err_count / len(data_tag)
     return [err_count, err_ratio]
 
-# thu1 = thulac.thulac(seg_only=True, model_path="/home/showlove/cc/code/THULAC-Python/models",user_dict='/home/showlove/PycharmProjects/data_test/nlp/user_dic.txt')
-# test_text = "哎呦,停用词测试,这是斯坦福中文分词器测试,三硝基对甲苯是一个测试测试词语,tfboys经常会玩儿会DOTA2"
-# for item in rm_stop_word(get_thunlp_cut_list(thu1.cut(test_text))):
-#     print item
 
+def text_classify(text, dictionary=None, lsi_model=None, predictor=None):
+    """
+    文本分类，字符串
+    :param text: 
+    :return: 
+    """
+    tag_dic = {
+        'Military': '军事',
+        'Culture': '文化',
+        'Auto': '汽车',
+        'Sports': '体育',
+        'Economy': '经济',
+        'Medicine': '医药'
+    }
+    if not dictionary:
+        dictionary = corpora.Dictionary.load(DICTIONARY_PATH)
+    if not lsi_model:
+        with open(LSI_MODEL, 'rb') as f:
+            lsi_model = pickle.load(f)
+    if not predictor:
+        with open(PREDICTOR_MODEL, 'rb') as f:
+            predictor = pickle.load(f)
+    files = os.listdir(LSI_PATH)
+    tags_list = []
+    for file in files:
+        t = file.split('.')[0]
+        if t not in tags_list:
+            tags_list.append(t)
+
+    text_str = convert_doc(text)
+    text_bow = dictionary.doc2bow(text_str)
+    tfidf_model = models.TfidfModel(dictionary=dictionary)
+    text_tfidf = tfidf_model[text_bow]
+    text_lsi = lsi_model[text_tfidf]
+    data = list()
+    cols = list()
+    rows = list()
+    for item in text_lsi:
+        data.append(item[1])
+        rows.append(0)
+        cols.append(item[0])
+    text_matrix = csr_matrix((data, (rows, cols))).toarray()
+    predict_tag_index = predictor.predict(text_matrix)
+    return tag_dic[tags_list[predict_tag_index[0]]]
 
 if __name__ == '__main__':
     dictionary = None
@@ -384,18 +424,5 @@ if __name__ == '__main__':
     　红魔夏季热身赛第二场，曼联2-1战胜皇家盐湖城。虽然友谊赛的含金量不算高，但回顾两场比赛，姆希塔良的表现都可圈可点。他已经逐渐奠定了自己在攻击线上不可获取的地位。此役对阵皇家盐湖城，姆希塔良一传一射。更令穆里尼奥欣喜的是，他与新援卢卡库之间正在形成不错的化学反应。
     """
 
-    demo_str = convert_doc(demo_doc)
-    demo_bow = dictionary.doc2bow(demo_str)
-    tfidf_model = models.TfidfModel(dictionary=dictionary)
-    demo_tfidf = tfidf_model[demo_bow]
-    demo_lsi = lsi_model[demo_tfidf]
-    data = list()
-    cols = list()
-    rows = list()
-    for item in demo_lsi:
-        data.append(item[1])
-        rows.append(0)
-        cols.append(item[0])
-    demo_matrix = csr_matrix((data, (rows, cols))).toarray()
-    predict_tag_index = predictor.predict(demo_matrix)
-    print '分类结果为: %s'%tags_list[predict_tag_index[0]]
+
+    print '分类结果为: %s'%text_classify(demo_doc)
