@@ -59,6 +59,7 @@ class nlpClassifier(object):
         self.saving_lsi_model_path = saving_lsi_model_path
         self.saving_predictor_model_path = saving_predictor_model_path
         self.THUNLP = self._init_thunlp()
+        self.train()
 
     def _init_needed_file(self):
         """
@@ -66,7 +67,23 @@ class nlpClassifier(object):
         通过初始化地址去找需要的文件，如果不存在文件则进行生成
         :return:
         """
-        pass
+        if not self.dictionary:
+            self.dictionary = corpora.Dictionary.load(self.saving_word_dictionary_path)
+        if not self.lsi_model:
+            with open(self.saving_lsi_model_path, 'rb') as f:
+                self.lsi_model = pickle.load(f)
+        if not self.predictor:
+            with open(self.saving_predictor_model_path, 'rb') as f:
+                self.predictor = pickle.load(f)
+
+    def train(self):
+        """
+        从样本文本中进行训练，生成dictionary, tf-idf file, lsi file, predictor model
+        :return:
+        """
+        self.build_text_dictionary()
+        self.build_tfidf_file()
+        self.build_lsi_file()
 
     def _init_thunlp(self):
         """
@@ -74,6 +91,20 @@ class nlpClassifier(object):
         :return:
         """
         return thulac.thulac(seg_only=True, model_path=self.thunlp_model_path,user_dict=self.thunlp_user_dic_path)
+
+    def get_tag_list(self):
+        """
+        从样本文本中得到标签列表
+        :return:
+        """
+
+        files = os.listdir(self.saving_lsi_file_path)
+        tags_list = []
+        for file in files:
+            t = file.split('.')[0]
+            if t not in tags_list:
+                tags_list.append(t)
+        return tags_list
 
     def _loading_example_text(self):
         """
@@ -196,8 +227,6 @@ class nlpClassifier(object):
                     if i % 100 == 0:
                         print '[%s] %d file has been loaded' % \
                               (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()), i)
-
-
 
                 else:
                     print '[error] example dir is not exist'
@@ -328,20 +357,18 @@ class nlpClassifier(object):
             'Economy': '经济',
             'Medicine': '医药'
         }
-        if not self.dictionary:
-            self.dictionary = corpora.Dictionary.load(self.saving_word_dictionary_path)
-        if not self.lsi_model:
-            with open(self.saving_lsi_model_path, 'rb') as f:
-                self.lsi_model = pickle.load(f)
-        if not self.predictor:
-            with open(self.saving_predictor_model_path, 'rb') as f:
-                self.predictor = pickle.load(f)
-        files = os.listdir(self.saving_lsi_file_path)
-        tags_list = []
-        for file in files:
-            t = file.split('.')[0]
-            if t not in tags_list:
-                tags_list.append(t)
+        self._init_needed_file()
+        # if not self.dictionary:
+        #     self.dictionary = corpora.Dictionary.load(self.saving_word_dictionary_path)
+        # if not self.lsi_model:
+        #     with open(self.saving_lsi_model_path, 'rb') as f:
+        #         self.lsi_model = pickle.load(f)
+        # if not self.predictor:
+        #     with open(self.saving_predictor_model_path, 'rb') as f:
+        #         self.predictor = pickle.load(f)
+
+        tags_list = self.get_tag_list()
+
 
         text_str = self.convert_doc(text)
         text_bow = self.dictionary.doc2bow(text_str)
