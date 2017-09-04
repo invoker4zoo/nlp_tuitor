@@ -21,6 +21,9 @@ _END="_END"
 _PAD="_PAD"
 
 def create_voabulary(simple=None,word2vec_model_path='../tmp/zhihu-word2vec-title-desc.bin-100',name_scope=''): #zhihu-word2vec-multilabel.bin-100
+    # mkdir
+    if not os.path.exists('cache_vocabulary_label_pik'):
+        os.mkdir('cache_vocabulary_label_pik')
     cache_path ='cache_vocabulary_label_pik/'+ name_scope + "_word_voabulary.pik"
     print("cache_path:",cache_path,"file_exists:",os.path.exists(cache_path))
     if os.path.exists(cache_path):#如果缓存文件存在，则直接读取
@@ -158,3 +161,21 @@ def load_data(vocabulary_word2index,vocabulary_word2index_label,valid_portion=0.
     # 5.return
     print("load_data.ended...")
     return train, test, test
+
+
+def load_data_predict(vocabulary_word2index,vocabulary_word2index_label,questionid_question_lists,uni_to_tri_gram=False):  # n_words=100000,
+    final_list=[]
+    for i, tuplee in enumerate(questionid_question_lists):
+        queston_id,question_string_list=tuplee
+        if uni_to_tri_gram:
+            x_=process_one_sentence_to_get_ui_bi_tri_gram(question_string_list)
+            x=x_.split(" ")
+        else:
+            x=question_string_list.split(" ")
+        x = [vocabulary_word2index.get(e, 0) for e in x] #if can't find the word, set the index as '0'.(equal to PAD_ID = 0)
+        if i<=2:
+            print("question_id:",queston_id);print("question_string_list:",question_string_list);print("x_indexed:",x)
+        final_list.append((queston_id,x))
+    number_examples = len(final_list)
+    print("number_examples:",number_examples) #
+    return  final_list

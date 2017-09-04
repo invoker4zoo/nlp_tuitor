@@ -40,7 +40,7 @@ def main(_):
     vocabulary_word2index, vocabulary_index2word = create_voabulary()
     vocab_size = len(vocabulary_word2index)
     vocabulary_word2index_label, _ = create_voabulary_label()
-    train, test, _ = load_data(vocabulary_word2index, vocabulary_word2index_label, data_type='train')
+    train, test, _ = load_data(vocabulary_word2index, vocabulary_word2index_label) # cancel data_type
     trainX, trainY = train
     testX, testY = test
     print("start padding & transform to one hot...")
@@ -117,7 +117,7 @@ def assign_pretrained_word_embedding(sess,vocabulary_index2word,vocab_size,fast_
     word_embedding_2dlist = [[]] * vocab_size  # create an empty word_embedding list.
     word_embedding_2dlist[0] = np.zeros(FLAGS.embed_size)  # assign empty for first word:'PAD'
     bound = np.sqrt(6.0) / np.sqrt(vocab_size)  # bound for random variables.
-    count_exist = 0;
+    count_exist = 0
     count_not_exist = 0
     for i in range(1, vocab_size):  # loop each word
         word = vocabulary_index2word[i]  # get a word
@@ -135,7 +135,7 @@ def assign_pretrained_word_embedding(sess,vocabulary_index2word,vocab_size,fast_
     word_embedding_final = np.array(word_embedding_2dlist)  # covert to 2d array.
     word_embedding = tf.constant(word_embedding_final, dtype=tf.float32)  # convert to tensor
     t_assign_embedding = tf.assign(fast_text.Embedding,word_embedding)  # assign this value to our embedding variables of our model.
-    sess.run(t_assign_embedding);
+    sess.run(t_assign_embedding)
     print("word. exists embedding:", count_exist, " ;word not exist embedding:", count_not_exist)
     print("using pre-trained word emebedding.ended...")
 
