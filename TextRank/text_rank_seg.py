@@ -19,7 +19,7 @@ THUNLP_USER_DIC_PATH = "/home/showlove/PycharmProjects/data_test/nlp/user_dic.tx
 STOP_WORD_DIC_PATH = "/home/showlove/PycharmProjects/data_test/nlp/stop_word_dic.txt"
 
 
-class TextRank(object):
+class TextSummary4Seg(object):
     """
 
     """
@@ -222,7 +222,7 @@ if __name__=='__main__':
     # 篮坛他们还远称不上“大腕”。^M
     # 个人技术方面：
     # """
-    model = TextRank(doc, 6, 0.85, 700)
+    model = TextSummary4Seg(doc, 6, 0.85, 700)
     model.print_result()
     # for seg in model.origin_doc_seg_list:
     #     print seg
