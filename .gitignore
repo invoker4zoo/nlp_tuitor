@@ -106,3 +106,9 @@ tmp/*
 
 # data ignore
 data/*
+
+# .idea
+.idea/*
+
+# log
+*.log
